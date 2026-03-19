@@ -12,7 +12,7 @@ import { doc, getDoc } from 'firebase/firestore';
 import { auth, db } from '@/config/firebase';
 import { useAuthStore } from '@/store/authStore';
 import { KothaBillUser } from '@/types';
-import { COLORS } from '@/constants';
+import { COLORS, COLLECTIONS } from '@/constants';
 import RootNavigator from '@/navigation/RootNavigator';
 
 // ── Custom Paper theme using KothaBill brand colors ───────────────────────────
@@ -40,7 +40,7 @@ export default function App() {
       if (firebaseUser) {
         // User is signed in — fetch their profile from Firestore
         try {
-          const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
+          const userDoc = await getDoc(doc(db, COLLECTIONS.USERS, firebaseUser.uid));
           if (userDoc.exists()) {
             setUser(userDoc.data() as KothaBillUser);
           } else {

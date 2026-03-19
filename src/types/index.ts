@@ -8,6 +8,7 @@ export type UserRole = 'owner' | 'tenant';
 export interface KothaBillUser {
   uid:         string;
   name:        string;
+  email:       string;
   phone:       string;
   role:        UserRole;
   roomCode?:   string;   // Owner: their generated code | Tenant: the code they joined with

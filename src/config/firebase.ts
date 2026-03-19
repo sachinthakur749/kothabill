@@ -1,8 +1,15 @@
 // src/config/firebase.ts
 
 import { initializeApp, getApps, getApp } from 'firebase/app';
-import { initializeAuth, getAuth, getReactNativePersistence } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
+import {
+  initializeAuth,
+  getAuth,
+  // @ts-ignore - getReactNativePersistence is available in the RN bundle but missing in some web types
+  getReactNativePersistence,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword
+} from 'firebase/auth';
+import { getFirestore, initializeFirestore, persistentLocalCache, persistentMultipleTabManager } from 'firebase/firestore';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const firebaseConfig = {
@@ -18,13 +25,19 @@ const firebaseConfig = {
 const isFirstLoad = getApps().length === 0;
 const app = isFirstLoad ? initializeApp(firebaseConfig) : getApp();
 
-// initializeAuth with AsyncStorage persistence — now works because metro.config.js
-// forces Metro to resolve Firebase's React Native build instead of the browser build.
+// initializeAuth with AsyncStorage persistence
 export const auth = isFirstLoad
   ? initializeAuth(app, {
     persistence: getReactNativePersistence(AsyncStorage),
   })
   : getAuth(app);
 
-export const db = getFirestore(app);
+// initializeFirestore with long-polling enabled for better reliability in some networks
+export const db = isFirstLoad
+  ? initializeFirestore(app, {
+    experimentalForceLongPolling: true,
+
+  })
+  : getFirestore(app);
+
 export default app;
