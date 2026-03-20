@@ -12,7 +12,8 @@ import { OwnerTabParamList } from '@/types';
 import OwnerDashboardScreen from '@/screens/owner/OwnerDashboardScreen';
 import AddBillScreen        from '@/screens/owner/AddBillScreen';
 import HistoryScreen from '@/screens/owner/HistoryScreen';
-import ProfileScreen from '@/screens/owner/ProfileScreen';
+import TenantsScreen from '@/screens/owner/TenantsScreen';
+import ProfileScreen from '@/screens/common/ProfileScreen';
 import NotificationsScreen from '@/screens/common/NotificationsScreen';
 
 const Tab = createBottomTabNavigator<OwnerTabParamList>();
@@ -55,6 +56,14 @@ export default function OwnerTabs() {
       <Tab.Screen name="History"   component={HistoryScreen} options={{ tabBarLabel: 'History' }} />
       <Tab.Screen name="Notifications" component={NotificationsScreen} options={{ tabBarLabel: 'Notifs' }} />
       <Tab.Screen name="Profile"   component={ProfileScreen} options={{ tabBarLabel: 'Profile' }} />
+      <Tab.Screen 
+        name="Tenants" 
+        component={TenantsScreen} 
+        options={{ 
+          tabBarButton: () => null,
+          headerShown: false,
+        }} 
+      />
     </Tab.Navigator>
   );
 }

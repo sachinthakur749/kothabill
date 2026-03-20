@@ -64,3 +64,25 @@ export const getNepaliYearsList = () => {
   }
   return years;
 };
+
+export const getLast6MonthsBS = () => {
+  const { month, year } = getCurrentNepaliMonthYear();
+  const months = [];
+  for (let i = 5; i >= 0; i--) {
+    let m = month - i;
+    let y = year;
+    if (m < 0) {
+      m += 12;
+      y -= 1;
+    }
+    const monthInfo = getNepaliMonth(m);
+    months.push({ 
+      labelEn: monthInfo.en, 
+      labelNe: monthInfo.ne, 
+      year: y,
+      month: m,
+      formatted: `${monthInfo.en} ${y}`
+    });
+  }
+  return months;
+};

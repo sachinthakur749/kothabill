@@ -3,19 +3,24 @@ import { View, StyleSheet, ScrollView, Alert, KeyboardAvoidingView, Platform, To
 import { Text, TextInput, Button, Card, Divider, ActivityIndicator, Portal } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
+import { useTranslation } from 'react-i18next';
+import i18n from 'i18next';
 import { collection, query, where, getDocs, addDoc, serverTimestamp } from 'firebase/firestore';
 import { Ionicons } from '@expo/vector-icons';
+import { useAppColors } from '@/hooks/useAppColors';
 
 import { db } from '@/config/firebase';
 import { useAuthStore } from '@/store/authStore';
-import { COLORS, SPACING, FONT_SIZE, RADIUS, COLLECTIONS, BILL_LABELS, SHADOW } from '@/constants';
+import { SPACING, FONT_SIZE, RADIUS, COLLECTIONS, BILL_LABELS, SHADOW } from '@/constants';
 import { OwnerTabParamList, KothaBillUser } from '@/types';
 import { getCurrentNepaliMonthYear, getNepaliMonthsList, getNepaliYearsList, getNepaliMonth } from '@/utils/nepaliDate';
 
 type AddBillRouteProp = RouteProp<OwnerTabParamList, 'AddBill'>;
 
 export default function AddBillScreen() {
-  const navigation = useNavigation();
+  const navigation = useNavigation<any>();
+  const { t } = useTranslation();
+  const COLORS = useAppColors();
   const route = useRoute<AddBillRouteProp>();
   const { user } = useAuthStore();
   const initialNepaliDate = getCurrentNepaliMonthYear();
@@ -80,8 +85,8 @@ export default function AddBillScreen() {
   };
 
   const handleSubmit = async () => {
-    if (!selectedTenantUid) return Alert.alert('Error', 'Please select a tenant');
-    if (!rent && !electricity && !water && !dustbin) return Alert.alert('Error', 'Please enter at least one amount');
+    if (!selectedTenantUid) return Alert.alert(t('common.error'), t('alerts.selectTenant'));
+    if (!rent && !electricity && !water && !dustbin) return Alert.alert(t('common.error'), t('alerts.enterAmount'));
 
     setLoading(true);
     try {
@@ -114,16 +119,18 @@ export default function AddBillScreen() {
         createdAt: Date.now(),
       });
       
-      Alert.alert('Success', 'Bill added successfully!', [
+      Alert.alert(t('common.success'), t('alerts.billAdded'), [
         { text: 'OK', onPress: () => navigation.goBack() }
       ]);
     } catch (error) {
       console.error('Error adding bill:', error);
-      Alert.alert('Error', 'Failed to save bill. Please try again.');
+      Alert.alert(t('common.error'), t('alerts.billFailed'));
     } finally {
       setLoading(false);
     }
   };
+
+  const styles = createStyles(COLORS);
 
   if (fetchingTenants) {
     return (
@@ -140,13 +147,13 @@ export default function AddBillScreen() {
         style={{ flex: 1 }}
       >
         <ScrollView contentContainerStyle={styles.scroll}>
-          <Text style={styles.title}>Add New Bill</Text>
+          <Text style={styles.title}>{t('owner.addNewBill')}</Text>
           
           <Card style={styles.formCard}>
             <Card.Content>
-              <Text style={styles.label}>Select Tenant</Text>
+              <Text style={styles.label}>{t('owner.selectTenant')}</Text>
               {tenants.length === 0 ? (
-                <Text style={styles.noTenants}>No tenants found for your property.</Text>
+                <Text style={styles.noTenants}>{t('owner.noTenantsFound')}</Text>
               ) : (
                 <View style={styles.tenantSelector}>
                   {tenants.map((t: KothaBillUser) => (
@@ -167,7 +174,7 @@ export default function AddBillScreen() {
                 </View>
               )}
 
-              <Text style={[styles.label, { marginTop: SPACING.md }]}>Bill Month (Nepali BS)</Text>
+              <Text style={[styles.label, { marginTop: SPACING.md }]}>{t('owner.billMonthBS')}</Text>
               <TouchableOpacity 
                 style={styles.pickerTrigger} 
                 onPress={() => setShowPicker(true)}
@@ -180,7 +187,7 @@ export default function AddBillScreen() {
 
               <View style={styles.row}>
                 <View style={styles.col}>
-                  <Text style={styles.label}>{BILL_LABELS.rent.en}</Text>
+                  <Text style={styles.label}>{t('bills.rent')}</Text>
                   <TextInput
                     value={rent}
                     onChangeText={setRent}
@@ -188,10 +195,12 @@ export default function AddBillScreen() {
                     mode="outlined"
                     placeholder="Rs. 0"
                     style={styles.input}
+                    textColor={COLORS.textPrimary}
+                    outlineColor={COLORS.border}
                   />
                 </View>
                 <View style={styles.col}>
-                  <Text style={styles.label}>{BILL_LABELS.electricity.en}</Text>
+                  <Text style={styles.label}>{t('bills.electricity')}</Text>
                   <TextInput
                     value={electricity}
                     onChangeText={setElectricity}
@@ -199,13 +208,15 @@ export default function AddBillScreen() {
                     mode="outlined"
                     placeholder="Rs. 0"
                     style={styles.input}
+                    textColor={COLORS.textPrimary}
+                    outlineColor={COLORS.border}
                   />
                 </View>
               </View>
 
               <View style={styles.row}>
                 <View style={styles.col}>
-                  <Text style={styles.label}>{BILL_LABELS.water.en}</Text>
+                  <Text style={styles.label}>{t('bills.water')}</Text>
                   <TextInput
                     value={water}
                     onChangeText={setWater}
@@ -213,10 +224,12 @@ export default function AddBillScreen() {
                     mode="outlined"
                     placeholder="Rs. 0"
                     style={styles.input}
+                    textColor={COLORS.textPrimary}
+                    outlineColor={COLORS.border}
                   />
                 </View>
                 <View style={styles.col}>
-                  <Text style={styles.label}>{BILL_LABELS.dustbin.en}</Text>
+                  <Text style={styles.label}>{t('bills.dustbin')}</Text>
                   <TextInput
                     value={dustbin}
                     onChangeText={setDustbin}
@@ -224,11 +237,13 @@ export default function AddBillScreen() {
                     mode="outlined"
                     placeholder="Rs. 0"
                     style={styles.input}
+                    textColor={COLORS.textPrimary}
+                    outlineColor={COLORS.border}
                   />
                 </View>
               </View>
 
-              <Text style={[styles.label, { marginTop: SPACING.md }]}>Optional Note</Text>
+              <Text style={[styles.label, { marginTop: SPACING.md }]}>{t('owner.optionalNote')}</Text>
               <TextInput
                 value={note}
                 onChangeText={setNote}
@@ -237,10 +252,12 @@ export default function AddBillScreen() {
                 multiline
                 numberOfLines={2}
                 style={styles.input}
+                textColor={COLORS.textPrimary}
+                outlineColor={COLORS.border}
               />
 
               <View style={styles.totalBox}>
-                <Text style={styles.totalLabel}>Total Amount:</Text>
+                <Text style={styles.totalLabel}>{t('common.totalAmount')}:</Text>
                 <Text style={styles.totalValue}>Rs. {calculateTotal()}</Text>
               </View>
 
@@ -251,7 +268,7 @@ export default function AddBillScreen() {
                 disabled={loading || tenants.length === 0}
                 style={styles.submitBtn}
               >
-                Submit Bill
+                {t('owner.submitBill')}
               </Button>
             </Card.Content>
           </Card>
@@ -268,7 +285,7 @@ export default function AddBillScreen() {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Select Nepali Month</Text>
+              <Text style={styles.modalTitle}>{t('owner.selectNepaliMonth')}</Text>
               <TouchableOpacity onPress={() => setShowPicker(false)}>
                 <Ionicons name="close" size={24} color={COLORS.textPrimary} />
               </TouchableOpacity>
@@ -277,7 +294,7 @@ export default function AddBillScreen() {
             <View style={styles.pickerContainer}>
               {/* Year Column */}
               <View style={styles.pickerCol}>
-                <Text style={styles.pickerColLabel}>Year</Text>
+                <Text style={styles.pickerColLabel}>{t('common.year') || 'Year'}</Text>
                 <ScrollView contentContainerStyle={styles.pickerScroll}>
                   {years.map(y => (
                     <TouchableOpacity 
@@ -293,7 +310,7 @@ export default function AddBillScreen() {
 
               {/* Month Column */}
               <View style={styles.pickerCol}>
-                <Text style={styles.pickerColLabel}>Month</Text>
+                <Text style={styles.pickerColLabel}>{t('common.month')}</Text>
                 <ScrollView contentContainerStyle={styles.pickerScroll}>
                   {months.map(m => (
                     <TouchableOpacity 
@@ -302,7 +319,7 @@ export default function AddBillScreen() {
                       onPress={() => setPickerMonthIndex(m.index)}
                     >
                       <Text style={[styles.pickerItemText, pickerMonthIndex === m.index && styles.activePickerItemText]}>
-                        {m.labelNe} ({m.labelEn})
+                        {i18n.language === 'np' ? m.labelNe : m.labelEn}
                       </Text>
                     </TouchableOpacity>
                   ))}
@@ -315,7 +332,7 @@ export default function AddBillScreen() {
               onPress={handleConfirmPicker}
               style={styles.confirmBtn}
             >
-              Confirm Selection
+              {t('owner.confirmSelection')}
             </Button>
           </View>
         </View>
@@ -324,15 +341,15 @@ export default function AddBillScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (COLORS: any) => StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.background },
   scroll:    { padding: SPACING.md },
   center:    { flex: 1, alignItems: 'center', justifyContent: 'center' },
   title:     { fontSize: FONT_SIZE.xxl, fontWeight: '700', color: COLORS.textPrimary, marginBottom: SPACING.lg },
-  formCard:  { backgroundColor: COLORS.white, borderRadius: RADIUS.lg, ...SHADOW.sm },
+  formCard:  { backgroundColor: COLORS.surface, borderRadius: RADIUS.lg, ...SHADOW.sm },
   label:     { fontSize: FONT_SIZE.sm, fontWeight: '600', color: COLORS.textSecondary, marginBottom: SPACING.xs },
   input:     { backgroundColor: COLORS.surface, marginBottom: SPACING.sm },
-  divider:   { marginVertical: SPACING.lg },
+  divider:   { marginVertical: SPACING.lg, backgroundColor: COLORS.divider },
   row:       { flexDirection: 'row', gap: SPACING.md },
   col:       { flex: 1 },
   tenantSelector: { flexDirection: 'row', flexWrap: 'wrap', gap: SPACING.sm, marginBottom: SPACING.md },
@@ -381,7 +398,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   modalContent: {
-    backgroundColor: COLORS.white,
+    backgroundColor: COLORS.surface,
     borderTopLeftRadius: RADIUS.xl,
     borderTopRightRadius: RADIUS.xl,
     padding: SPACING.lg,

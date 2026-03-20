@@ -4,13 +4,17 @@ import { Text, Card, ActivityIndicator, Avatar, Badge } from 'react-native-paper
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { collection, query, where, onSnapshot } from 'firebase/firestore';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
+import { useAppColors } from '@/hooks/useAppColors';
 
 import { db } from '@/config/firebase';
 import { useAuthStore } from '@/store/authStore';
-import { COLORS, SPACING, FONT_SIZE, RADIUS, COLLECTIONS, SHADOW, BILL_COLORS } from '@/constants';
+import { SPACING, FONT_SIZE, RADIUS, COLLECTIONS, SHADOW, BILL_COLORS } from '@/constants';
 import { Bill } from '@/types';
 
 export default function BillHistoryScreen() {
+  const { t } = useTranslation();
+  const COLORS = useAppColors();
   const { user } = useAuthStore();
   const [bills, setBills] = useState<Bill[]>([]);
   const [loading, setLoading] = useState(true);
@@ -42,18 +46,20 @@ export default function BillHistoryScreen() {
     return unsubscribe;
   }, [user]);
 
+  const styles = createStyles(COLORS);
+
   const renderBillItem = ({ item }: { item: Bill }) => (
     <Card style={styles.billCard}>
       <Card.Content>
         <View style={styles.billHeader}>
           <View>
             <Text style={styles.monthText}>{item.month}</Text>
-            <Text style={styles.dateText}>Added on {new Date(item.createdAt).toLocaleDateString()}</Text>
+            <Text style={styles.dateText}>{t('common.added') || 'Added'}: {new Date(item.createdAt).toLocaleDateString()}</Text>
           </View>
           <View style={styles.headerRight}>
             <Text style={styles.totalText}>Rs. {item.total}</Text>
             <Badge style={[styles.statusBadge, { backgroundColor: item.status === 'paid' ? COLORS.success : COLORS.error }]}>
-              {item.status?.toUpperCase() || 'DUE'}
+              {item.status === 'paid' ? t('common.paid') : t('common.due')}
             </Badge>
           </View>
         </View>
@@ -61,15 +67,15 @@ export default function BillHistoryScreen() {
         <View style={styles.statsRow}>
           <View style={styles.stat}>
             <View style={[styles.dot, { backgroundColor: BILL_COLORS.rent }]} />
-            <Text style={styles.statLabel}>Rent: {item.rent}</Text>
+            <Text style={styles.statLabel}>{t('bills.rent')}: {item.rent}</Text>
           </View>
           <View style={styles.stat}>
             <View style={[styles.dot, { backgroundColor: BILL_COLORS.electricity }]} />
-            <Text style={styles.statLabel}>Elec: {item.electricity}</Text>
+            <Text style={styles.statLabel}>{t('bills.electricity')}: {item.electricity}</Text>
           </View>
           <View style={styles.stat}>
             <View style={[styles.dot, { backgroundColor: BILL_COLORS.water }]} />
-            <Text style={styles.statLabel}>Water: {item.water}</Text>
+            <Text style={styles.statLabel}>{t('bills.water')}: {item.water}</Text>
           </View>
         </View>
       </Card.Content>
@@ -79,7 +85,7 @@ export default function BillHistoryScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>Bill History</Text>
+        <Text style={styles.title}>{t('tenant.history')}</Text>
         <Avatar.Icon size={40} icon="history" color={COLORS.tenant} style={{ backgroundColor: COLORS.tenantLight }} />
       </View>
 
@@ -88,7 +94,7 @@ export default function BillHistoryScreen() {
       ) : bills.length === 0 ? (
         <View style={styles.emptyContainer}>
           <Ionicons name="receipt-outline" size={64} color={COLORS.textMuted} />
-          <Text style={styles.emptyText}>No bills found in your history.</Text>
+          <Text style={styles.emptyText}>{t('tenant.noBills')}</Text>
         </View>
       ) : (
         <FlatList
@@ -103,7 +109,7 @@ export default function BillHistoryScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (COLORS: any) => StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.background },
   header: {
     padding: SPACING.lg,
@@ -117,8 +123,10 @@ const styles = StyleSheet.create({
   billCard: {
     marginBottom: SPACING.md,
     borderRadius: RADIUS.md,
-    backgroundColor: COLORS.white,
+    backgroundColor: COLORS.surface,
     ...SHADOW.sm,
+    borderWidth: 1,
+    borderColor: COLORS.border,
   },
   billHeader: {
     flexDirection: 'row',

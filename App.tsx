@@ -3,8 +3,9 @@
 
 import React, { useEffect } from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { PaperProvider, MD3LightTheme } from 'react-native-paper';
+import { PaperProvider, MD3LightTheme, MD3DarkTheme } from 'react-native-paper';
 import { NavigationContainer } from '@react-navigation/native';
+import '@/i18n'; // Initialize i18n
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { onAuthStateChanged } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
@@ -15,8 +16,11 @@ import { KothaBillUser } from '@/types';
 import { COLORS, COLLECTIONS } from '@/constants';
 import RootNavigator from '@/navigation/RootNavigator';
 
-// ── Custom Paper theme using KothaBill brand colors ───────────────────────────
-const theme = {
+import { useColorScheme } from 'react-native';
+import { useThemeStore } from '@/store/themeStore';
+
+// ── Custom Paper themes using KothaBill brand colors ───────────────────────────
+const lightTheme = {
   ...MD3LightTheme,
   colors: {
     ...MD3LightTheme.colors,
@@ -31,7 +35,26 @@ const theme = {
   },
 };
 
+const darkTheme = {
+  ...MD3DarkTheme,
+  colors: {
+    ...MD3DarkTheme.colors,
+    primary:          COLORS.primary,
+    secondary:        COLORS.tenant,
+    // Add more specific dark colors if needed
+  },
+};
+
 export default function App() {
+  const systemColorScheme = useColorScheme();
+  const { isDarkMode, setDarkMode } = useThemeStore();
+  
+  useEffect(() => {
+    // If no preference is set, follow system (optional logic)
+    // For now, let's just use the store value which defaults to false
+  }, [systemColorScheme]);
+
+  const theme = isDarkMode ? darkTheme : lightTheme;
   const { setUser, setLoading } = useAuthStore();
 
   useEffect(() => {

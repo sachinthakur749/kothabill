@@ -1,18 +1,23 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
-import { Text, Card, TextInput, Button, ActivityIndicator, Avatar, Badge } from 'react-native-paper';
+import { View, StyleSheet, ScrollView, TouchableOpacity, Dimensions, Alert } from 'react-native';
+import { Text, Card, Button, Avatar, ActivityIndicator, Badge, TextInput } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { collection, query, where, getDocs, doc, updateDoc, limit, onSnapshot, addDoc } from 'firebase/firestore';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
+import { useTranslation } from 'react-i18next';
+import { useAppColors } from '@/hooks/useAppColors';
+import { LineChart } from 'react-native-chart-kit';
 
 import { db } from '@/config/firebase';
 import { useAuthStore } from '@/store/authStore';
-import { COLORS, SPACING, FONT_SIZE, RADIUS, COLLECTIONS, SHADOW, BILL_COLORS, BILL_LABELS } from '@/constants';
+import { SPACING, FONT_SIZE, RADIUS, COLLECTIONS, SHADOW, BILL_COLORS, BILL_LABELS } from '@/constants';
 import { Bill } from '@/types';
 
 export default function TenantHomeScreen() {
   const navigation = useNavigation<any>();
+  const { t } = useTranslation();
+  const COLORS = useAppColors();
   const { user, setUser } = useAuthStore();
   const [loading, setLoading] = useState(false);
   const [joining, setJoining] = useState(false);
@@ -20,246 +25,242 @@ export default function TenantHomeScreen() {
   const [latestBill, setLatestBill] = useState<Bill | null>(null);
   const [fetchingBill, setFetchingBill] = useState(false);
 
-  // Listen for the latest bill if linked
   useEffect(() => {
-    if (user?.roomCode) {
-      setFetchingBill(true);
-      const q = query(
-        collection(db, COLLECTIONS.BILLS),
-        where('tenantUid', '==', user.uid)
-      );
+    if (!user?.roomCode) return;
 
-      const unsubscribe = onSnapshot(q, (snapshot) => {
-        if (!snapshot.empty) {
-          const docs = snapshot.docs.map(d => d.data() as Bill);
-          // Sort by createdAt descending
-          docs.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
-          setLatestBill(docs[0]);
-        } else {
-          setLatestBill(null);
-        }
-        setFetchingBill(false);
-      }, (error) => {
-        console.error('Error fetching bill:', error);
-        setFetchingBill(false);
-      });
+    setFetchingBill(true);
+    const q = query(
+      collection(db, COLLECTIONS.BILLS),
+      where('tenantUid', '==', user.uid),
+      limit(1)
+    );
 
-      return unsubscribe;
-    }
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      if (!snapshot.empty) {
+        const billData = {
+          ...snapshot.docs[0].data(),
+          billId: snapshot.docs[0].id,
+        } as Bill;
+        setLatestBill(billData);
+      } else {
+        setLatestBill(null);
+      }
+      setFetchingBill(false);
+    });
+
+    return unsubscribe;
   }, [user?.roomCode]);
 
   const handleJoinRoom = async () => {
-    if (!roomCode.trim()) return Alert.alert('Error', 'Please enter a Room Code');
-    
+    if (!roomCode.trim() || !user) return;
     setJoining(true);
     try {
-      // 1. Check if room exists
-      const q = query(collection(db, COLLECTIONS.ROOMS), where('roomCode', '==', roomCode.trim().toUpperCase()));
-      const snapshot = await getDocs(q);
-      
-      if (snapshot.empty) {
-        setJoining(false);
-        return Alert.alert('Invalid Code', 'No property found with this code. Please check and try again.');
+      const q = query(collection(db, COLLECTIONS.USERS), where('roomCode', '==', roomCode.trim()), where('role', '==', 'owner'));
+      const ownerSnap = await getDocs(q);
+
+      if (ownerSnap.empty) {
+        return Alert.alert('Error', 'Invalid Room Code. No owner found with this code.');
       }
 
-      // 2. Link tenant to room in users collection
-      const userRef = doc(db, COLLECTIONS.USERS, user!.uid);
-      await updateDoc(userRef, { roomCode: roomCode.trim().toUpperCase() });
+      const userRef = doc(db, COLLECTIONS.USERS, user.uid);
+      await updateDoc(userRef, { roomCode: roomCode.trim() });
+      setUser({ ...user, roomCode: roomCode.trim() });
 
-      // 2.5 Add notification for owner
-      const roomDoc = snapshot.docs[0].data();
-      if (roomDoc.ownerId) {
-        await addDoc(collection(db, COLLECTIONS.NOTIFICATIONS), {
-          toUserId: roomDoc.ownerId,
-          message: `${user?.name} has joined your room (${roomCode.trim().toUpperCase()})`,
-          isRead: false,
-          createdAt: Date.now(),
-          type: 'join_room'
-        });
-      }
-
-      // 3. Update local store
-      setUser({ ...user!, roomCode: roomCode.trim().toUpperCase() });
-      Alert.alert('Success', 'You have successfully joined the room!');
     } catch (error) {
       console.error('Error joining room:', error);
-      Alert.alert('Error', 'Failed to join room. Please try again.');
+      Alert.alert('Error', 'Failed to join room.');
     } finally {
       setJoining(false);
     }
   };
 
-  const renderJoinRoom = () => (
-    <View style={styles.center}>
-      <View style={styles.welcomeHero}>
-        <Avatar.Icon size={100} icon="home-variant-outline" color={COLORS.tenant} style={{ backgroundColor: COLORS.tenantLight }} />
-        <Text style={styles.welcomeTitle}>Welcome to KothaBill</Text>
-        <Text style={styles.welcomeSub}>You are not linked to any property yet.</Text>
-      </View>
+  const styles = createStyles(COLORS);
 
-      <Card style={styles.joinCard}>
-        <Card.Content>
-          <Text style={styles.label}>Enter Room Code</Text>
+  if (!user?.roomCode) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.joinContent}>
+          <Avatar.Icon size={80} icon="home-import" color={COLORS.tenant} style={{ backgroundColor: COLORS.tenantLight }} />
+          <Text style={styles.joinTitle}>Welcome to KothaBill</Text>
+          <Text style={styles.joinDesc}>Enter the room code provided by your home owner to get started.</Text>
+          
           <TextInput
-            placeholder="KB-XXXX"
+            placeholder="Enter Room Code (e.g. KB-1234)"
             value={roomCode}
             onChangeText={setRoomCode}
-            autoCapitalize="characters"
             mode="outlined"
-            style={styles.input}
+            style={styles.joinInput}
+            outlineColor={COLORS.tenant}
             activeOutlineColor={COLORS.tenant}
           />
+
           <Button 
             mode="contained" 
-            onPress={handleJoinRoom}
+            onPress={handleJoinRoom} 
             loading={joining}
-            disabled={joining || !roomCode}
             style={styles.joinBtn}
+            buttonColor={COLORS.tenant}
           >
             Join Property
           </Button>
-          <Text style={styles.hintText}>Ask your owner for the unique Room Code.</Text>
-        </Card.Content>
-      </Card>
-    </View>
-  );
-
-  const renderDashboard = () => (
-    <ScrollView contentContainerStyle={styles.scroll}>
-      <View style={styles.header}>
-        <View>
-          <Text style={styles.greeting}>Namaste,</Text>
-          <Text style={styles.name}>{user?.name}</Text>
         </View>
-        <Avatar.Icon size={48} icon="account" color={COLORS.tenant} style={{ backgroundColor: COLORS.tenantLight }} />
-      </View>
-
-      <Text style={styles.sectionTitle}>Latest Bill</Text>
-      
-      {fetchingBill ? (
-        <ActivityIndicator color={COLORS.tenant} style={{ marginTop: SPACING.xl }} />
-      ) : latestBill ? (
-        <Card style={styles.billCard}>
-            <View style={styles.billHeader}>
-              <View>
-                <Text style={styles.billMonth}>{latestBill.month}</Text>
-                <Text style={styles.billDate}>Added: {new Date(latestBill.createdAt).toLocaleDateString()}</Text>
-              </View>
-              <View style={styles.headerRight}>
-                <Text style={styles.billTotal}>Rs. {latestBill.total}</Text>
-                <Badge style={[styles.statusBadge, { backgroundColor: latestBill.status === 'paid' ? COLORS.success : COLORS.error }]}>
-                  {latestBill.status?.toUpperCase() || 'DUE'}
-                </Badge>
-              </View>
-            </View>
-          <Card.Content>
-            <View style={styles.billRow}>
-              <View style={[styles.dot, { backgroundColor: BILL_COLORS.rent }]} />
-              <Text style={styles.catLabel}>{BILL_LABELS.rent.en}</Text>
-              <Text style={styles.catValue}>Rs. {latestBill.rent}</Text>
-            </View>
-            <View style={styles.billRow}>
-              <View style={[styles.dot, { backgroundColor: BILL_COLORS.electricity }]} />
-              <Text style={styles.catLabel}>{BILL_LABELS.electricity.en}</Text>
-              <Text style={styles.catValue}>Rs. {latestBill.electricity}</Text>
-            </View>
-            <View style={styles.billRow}>
-              <View style={[styles.dot, { backgroundColor: BILL_COLORS.water }]} />
-              <Text style={styles.catLabel}>{BILL_LABELS.water.en}</Text>
-              <Text style={styles.catValue}>Rs. {latestBill.water}</Text>
-            </View>
-            <View style={styles.billRow}>
-              <View style={[styles.dot, { backgroundColor: BILL_COLORS.dustbin }]} />
-              <Text style={styles.catLabel}>{BILL_LABELS.dustbin.en}</Text>
-              <Text style={styles.catValue}>Rs. {latestBill.dustbin}</Text>
-            </View>
-
-            {latestBill.note && (
-              <View style={styles.noteBox}>
-                <Ionicons name="information-circle-outline" size={16} color={COLORS.textSecondary} />
-                <Text style={styles.noteText}>{latestBill.note}</Text>
-              </View>
-            )}
-          </Card.Content>
-        </Card>
-      ) : (
-        <Card style={styles.emptyCard}>
-          <Card.Content style={styles.emptyContent}>
-            <Ionicons name="calendar-outline" size={48} color={COLORS.textMuted} />
-            <Text style={styles.emptyText}>No bills found for this property.</Text>
-          </Card.Content>
-        </Card>
-      )}
-
-      {/* Quick Links */}
-      <View style={styles.quickLinks}>
-        <TouchableOpacity style={styles.linkCard} onPress={() => navigation.navigate('BillHistory')}>
-          <Ionicons name="receipt-outline" size={28} color={COLORS.tenant} />
-          <Text style={styles.linkText}>History</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.linkCard} onPress={() => navigation.navigate('OwnerInfo')}>
-          <Ionicons name="person-outline" size={28} color={COLORS.tenant} />
-          <Text style={styles.linkText}>Owner Info</Text>
-        </TouchableOpacity>
-      </View>
-    </ScrollView>
-  );
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
-      {!user?.roomCode ? renderJoinRoom() : renderDashboard()}
+      <ScrollView contentContainerStyle={styles.scroll}>
+        <View style={styles.header}>
+          <View>
+            <Text style={styles.greeting}>{t('common.welcome')},</Text>
+            <Text style={styles.name}>{user?.name}</Text>
+          </View>
+          <Avatar.Icon size={48} icon="account" color={COLORS.tenant} style={{ backgroundColor: COLORS.tenantLight }} />
+        </View>
+
+        <Text style={styles.sectionTitle}>{t('tenant.latestBill')}</Text>
+        
+        {fetchingBill ? (
+          <ActivityIndicator color={COLORS.tenant} style={{ marginTop: SPACING.xl }} />
+        ) : latestBill ? (
+          <>
+            <Card style={styles.billCard}>
+                <View style={styles.billHeader}>
+                  <View>
+                    <Text style={styles.billMonth}>{latestBill.month}</Text>
+                    <Text style={styles.billDate}>{t('common.month')}: {latestBill.month}</Text>
+                  </View>
+                  <View style={styles.headerRight}>
+                    <Text style={styles.billTotal}>Rs. {latestBill.total}</Text>
+                    <Badge style={[styles.statusBadge, { backgroundColor: latestBill.status === 'paid' ? COLORS.success : COLORS.error }]}>
+                      {latestBill.status === 'paid' ? t('common.paid') : t('common.due')}
+                    </Badge>
+                  </View>
+                </View>
+              <Card.Content>
+                <View style={styles.billRow}>
+                  <View style={[styles.dot, { backgroundColor: BILL_COLORS.rent }]} />
+                  <Text style={styles.catLabel}>{t('bills.rent')}</Text>
+                  <Text style={styles.catValue}>Rs. {latestBill.rent}</Text>
+                </View>
+                <View style={styles.billRow}>
+                  <View style={[styles.dot, { backgroundColor: BILL_COLORS.electricity }]} />
+                  <Text style={styles.catLabel}>{t('bills.electricity')}</Text>
+                  <Text style={styles.catValue}>Rs. {latestBill.electricity}</Text>
+                </View>
+                <View style={styles.billRow}>
+                  <View style={[styles.dot, { backgroundColor: BILL_COLORS.water }]} />
+                  <Text style={styles.catLabel}>{t('bills.water')}</Text>
+                  <Text style={styles.catValue}>Rs. {latestBill.water}</Text>
+                </View>
+                <View style={styles.billRow}>
+                  <View style={[styles.dot, { backgroundColor: BILL_COLORS.dustbin }]} />
+                  <Text style={styles.catLabel}>{t('bills.dustbin')}</Text>
+                  <Text style={styles.catValue}>Rs. {latestBill.dustbin}</Text>
+                </View>
+
+                {latestBill.note && (
+                  <View style={styles.noteBox}>
+                    <Ionicons name="information-circle-outline" size={16} color={COLORS.textSecondary} />
+                    <Text style={styles.noteText}>{latestBill.note}</Text>
+                  </View>
+                )}
+              </Card.Content>
+            </Card>
+
+            <Text style={[styles.sectionTitle, { marginTop: SPACING.lg }]}>Usage Trend</Text>
+            <LineChart
+              data={{
+                labels: ["Oct", "Nov", "Dec", "Jan", "Feb", "Mar"],
+                datasets: [{ data: [20, 45, 28, 80, 99, 43] }]
+              }}
+              width={Dimensions.get('window').width - 32}
+              height={180}
+              chartConfig={{
+                backgroundColor: COLORS.surface,
+                backgroundGradientFrom: COLORS.surface,
+                backgroundGradientTo: COLORS.surface,
+                decimalPlaces: 0,
+                color: (opacity = 1) => COLORS.tenant,
+                labelColor: (opacity = 1) => COLORS.textSecondary,
+                style: { borderRadius: 16 },
+                propsForDots: { r: "4", strokeWidth: "2", stroke: COLORS.tenant }
+              }}
+              bezier
+              style={{ marginVertical: 8, borderRadius: 16 }}
+            />
+          </>
+        ) : (
+          <Card style={styles.emptyCard}>
+            <Card.Content style={styles.emptyContent}>
+              <Ionicons name="calendar-outline" size={48} color={COLORS.textMuted} />
+              <Text style={styles.emptyText}>{t('tenant.noBills')}</Text>
+            </Card.Content>
+          </Card>
+        )}
+
+        {/* Quick Links */}
+        <View style={styles.quickLinks}>
+          <TouchableOpacity style={styles.linkCard} onPress={() => navigation.navigate('BillHistory')}>
+            <Ionicons name="receipt-outline" size={28} color={COLORS.tenant} />
+            <Text style={styles.linkText}>{t('tenant.history')}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.linkCard} onPress={() => navigation.navigate('OwnerInfo')}>
+            <Ionicons name="person-outline" size={28} color={COLORS.tenant} />
+            <Text style={styles.linkText}>{t('tenant.ownerInfo')}</Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (COLORS: any) => StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.background },
-  scroll:    { padding: SPACING.md },
-  center:    { flex: 1, alignItems: 'center', justifyContent: 'center', padding: SPACING.lg },
-  
-  // Join Room Styles
-  welcomeHero: { alignItems: 'center', marginBottom: SPACING.xxl },
-  welcomeTitle: { fontSize: FONT_SIZE.xxl, fontWeight: '700', color: COLORS.tenant, marginTop: SPACING.md },
-  welcomeSub: { fontSize: FONT_SIZE.md, color: COLORS.textMuted, textAlign: 'center', marginTop: SPACING.xs },
-  joinCard: { width: '100%', borderRadius: RADIUS.lg, backgroundColor: COLORS.white, ...SHADOW.md },
-  label: { fontSize: FONT_SIZE.sm, fontWeight: '600', color: COLORS.textSecondary, marginBottom: SPACING.xs },
-  input: { backgroundColor: COLORS.surface, marginBottom: SPACING.md },
-  joinBtn: { backgroundColor: COLORS.tenant, borderRadius: RADIUS.md, paddingVertical: 4 },
-  hintText: { fontSize: FONT_SIZE.xs, color: COLORS.textMuted, textAlign: 'center', marginTop: SPACING.md },
-
-  // Dashboard Styles
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+  scroll: { padding: SPACING.md },
+  header: { 
+    flexDirection: 'row', 
+    justifyContent: 'space-between', 
     alignItems: 'center',
-    marginBottom: SPACING.xl,
+    marginBottom: SPACING.lg,
+    paddingTop: SPACING.sm,
   },
   greeting: { fontSize: FONT_SIZE.md, color: COLORS.textSecondary },
-  name: { fontSize: FONT_SIZE.xxl, fontWeight: '700', color: COLORS.textPrimary },
-  sectionTitle: { fontSize: FONT_SIZE.lg, fontWeight: '600', color: COLORS.textPrimary, marginBottom: SPACING.md },
-  billCard: { backgroundColor: COLORS.white, borderRadius: RADIUS.lg, overflow: 'hidden', ...SHADOW.md },
+  name: { fontSize: FONT_SIZE.xxl, fontWeight: '800', color: COLORS.textPrimary },
+  
+  joinContent: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: SPACING.xl },
+  joinTitle: { fontSize: FONT_SIZE.xl, fontWeight: '700', marginTop: SPACING.lg, color: COLORS.textPrimary },
+  joinDesc: { textAlign: 'center', color: COLORS.textSecondary, marginTop: SPACING.sm, marginBottom: SPACING.xl },
+  joinInput: { width: '100%', marginBottom: SPACING.md, backgroundColor: COLORS.surface },
+  joinBtn: { width: '100%', borderRadius: RADIUS.md },
+
+  sectionTitle: { fontSize: FONT_SIZE.lg, fontWeight: '700', color: COLORS.textPrimary, marginBottom: SPACING.md },
+  billCard: { 
+    borderRadius: RADIUS.lg, 
+    backgroundColor: COLORS.white, 
+    ...SHADOW.sm,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
   billHeader: {
-    backgroundColor: COLORS.tenantLight,
-    padding: SPACING.md,
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  billMonth: { fontSize: FONT_SIZE.xl, fontWeight: '700', color: COLORS.tenant },
-  billDate: { fontSize: 10, color: COLORS.textSecondary },
-  headerRight: { alignItems: 'flex-end', gap: 2 },
-  billTotal: { fontSize: FONT_SIZE.lg, fontWeight: '800', color: COLORS.tenant },
-  statusBadge: { fontSize: 8, height: 16, lineHeight: 14, minWidth: 40 },
-  billRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: SPACING.sm,
+    padding: SPACING.md,
     borderBottomWidth: 1,
     borderBottomColor: COLORS.divider,
   },
+  billMonth: { fontSize: FONT_SIZE.lg, fontWeight: '700', color: COLORS.tenant },
+  billDate: { fontSize: FONT_SIZE.xs, color: COLORS.textMuted },
+  headerRight: { alignItems: 'flex-end' },
+  billTotal: { fontSize: FONT_SIZE.xl, fontWeight: '800', color: COLORS.textPrimary },
+  statusBadge: { marginTop: 4 },
+
+  billRow: { flexDirection: 'row', alignItems: 'center', marginBottom: SPACING.xs },
   dot: { width: 8, height: 8, borderRadius: 4, marginRight: SPACING.sm },
   catLabel: { flex: 1, fontSize: FONT_SIZE.md, color: COLORS.textSecondary },
   catValue: { fontSize: FONT_SIZE.md, fontWeight: '600', color: COLORS.textPrimary },
+  
   noteBox: {
     marginTop: SPACING.md,
     padding: SPACING.sm,
@@ -269,22 +270,22 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: SPACING.xs,
   },
-  noteText: { fontSize: FONT_SIZE.sm, color: COLORS.textSecondary, fontStyle: 'italic', flex: 1 },
-  emptyCard: { borderRadius: RADIUS.lg, paddingVertical: SPACING.xl },
-  emptyContent: { alignItems: 'center' },
-  emptyText: { marginTop: SPACING.md, color: COLORS.textMuted },
-  quickLinks: {
-    flexDirection: 'row',
-    gap: SPACING.md,
-    marginTop: SPACING.xl,
-  },
+  noteText: { fontSize: FONT_SIZE.xs, color: COLORS.textSecondary, fontStyle: 'italic' },
+
+  quickLinks: { flexDirection: 'row', gap: SPACING.md, marginTop: SPACING.xl },
   linkCard: {
     flex: 1,
     backgroundColor: COLORS.white,
     padding: SPACING.md,
-    borderRadius: RADIUS.md,
+    borderRadius: RADIUS.lg,
     alignItems: 'center',
     ...SHADOW.sm,
+    borderWidth: 1,
+    borderColor: COLORS.border,
   },
-  linkText: { marginTop: SPACING.xs, fontSize: FONT_SIZE.sm, fontWeight: '500', color: COLORS.textSecondary },
+  linkText: { marginTop: SPACING.xs, fontSize: FONT_SIZE.xs, fontWeight: '600', color: COLORS.textSecondary },
+
+  emptyCard: { borderRadius: RADIUS.lg, backgroundColor: COLORS.white, ...SHADOW.sm },
+  emptyContent: { alignItems: 'center', padding: SPACING.xl },
+  emptyText: { marginTop: SPACING.md, color: COLORS.textMuted, textAlign: 'center' },
 });

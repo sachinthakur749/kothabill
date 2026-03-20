@@ -4,13 +4,17 @@ import { Text, Card, ActivityIndicator, Avatar, Searchbar, Badge } from 'react-n
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { collection, query, where, onSnapshot, doc, updateDoc, getDocs } from 'firebase/firestore';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
+import { useAppColors } from '@/hooks/useAppColors';
 
 import { db } from '@/config/firebase';
 import { useAuthStore } from '@/store/authStore';
-import { COLORS, SPACING, FONT_SIZE, RADIUS, COLLECTIONS, SHADOW, BILL_COLORS } from '@/constants';
+import { SPACING, FONT_SIZE, RADIUS, COLLECTIONS, SHADOW, BILL_COLORS } from '@/constants';
 import { Bill } from '@/types';
 
 export default function HistoryScreen() {
+  const { t } = useTranslation();
+  const COLORS = useAppColors();
   const { user } = useAuthStore();
   const [bills, setBills] = useState<any[]>([]);
   const [filteredBills, setFilteredBills] = useState<any[]>([]);
@@ -34,8 +38,6 @@ export default function HistoryScreen() {
       // If any bills are missing tenantName, fetch them from users
       const missingNames = billData.filter(b => !b.tenantName);
       if (missingNames.length > 0) {
-        // For simplicity in this phase, we'll just fetch all users once
-        // In a real app, you'd do a more targeted fetch
         const usersSnap = await getDocs(collection(db, COLLECTIONS.USERS));
         const userMap: Record<string, string> = {};
         usersSnap.forEach(doc => {
@@ -67,10 +69,10 @@ export default function HistoryScreen() {
     try {
       const billRef = doc(db, COLLECTIONS.BILLS, billId);
       await updateDoc(billRef, { status: 'paid' });
-      Alert.alert('Success', 'Bill marked as paid.');
+      Alert.alert(t('common.success'), t('alerts.billUpdated'));
     } catch (error) {
       console.error('Error marking as paid:', error);
-      Alert.alert('Error', 'Failed to update bill status.');
+      Alert.alert(t('common.error'), t('alerts.updateFailed'));
     }
   };
 
@@ -87,6 +89,8 @@ export default function HistoryScreen() {
     }
   };
 
+  const styles = createStyles(COLORS);
+
   const renderBillItem = ({ item }: { item: any }) => (
     <Card style={styles.billCard}>
       <Card.Content>
@@ -98,7 +102,7 @@ export default function HistoryScreen() {
               <View style={styles.monthRow}>
                 <Text style={styles.monthText}>{item.month}</Text>
                 <Badge style={[styles.statusBadge, { backgroundColor: item.status === 'paid' ? COLORS.success : COLORS.error }]}>
-                  {item.status?.toUpperCase() || 'DUE'}
+                  {item.status === 'paid' ? t('common.paid') : t('common.due')}
                 </Badge>
               </View>
             </View>
@@ -107,21 +111,21 @@ export default function HistoryScreen() {
         </View>
 
         <View style={styles.detailsRow}>
-          <Text style={styles.detailText}>Added: {new Date(item.createdAt).toLocaleDateString()}</Text>
+          <Text style={styles.detailText}>{t('common.added') || 'Added'}: {new Date(item.createdAt).toLocaleDateString()}</Text>
           <View style={styles.actions}>
             {item.status !== 'paid' && (
               <TouchableOpacity style={styles.payBtn} onPress={() => markAsPaid(item.billId)}>
-                <Text style={styles.payBtnText}>Mark Paid</Text>
+                <Text style={styles.payBtnText}>{t('common.markPaid')}</Text>
               </TouchableOpacity>
             )}
             <TouchableOpacity 
               style={styles.viewBtn}
               onPress={() => Alert.alert(
-                'Bill Details',
-                `Month: ${item.month}\nRent: Rs. ${item.rent}\nElec: Rs. ${item.electricity}\nWater: Rs. ${item.water}\nDustbin: Rs. ${item.dustbin}\n\nTotal: Rs. ${item.total}\nNote: ${item.note || 'None'}`
+                t('common.details'),
+                `${t('common.month')}: ${item.month}\n${t('bills.rent')}: Rs. ${item.rent}\n${t('bills.electricity')}: Rs. ${item.electricity}\n${t('bills.water')}: Rs. ${item.water}\n${t('bills.dustbin')}: Rs. ${item.dustbin}\n\n${t('common.total')}: Rs. ${item.total}\n${t('common.note')}: ${item.note || 'None'}`
               )}
             >
-              <Text style={styles.viewBtnText}>Details</Text>
+              <Text style={styles.viewBtnText}>{t('common.details')}</Text>
               <Ionicons name="chevron-forward" size={12} color={COLORS.primary} />
             </TouchableOpacity>
           </View>
@@ -133,16 +137,18 @@ export default function HistoryScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>All Bills</Text>
+        <Text style={styles.title}>{t('owner.history')}</Text>
         <Ionicons name="filter-outline" size={24} color={COLORS.primary} />
       </View>
 
       <Searchbar
-        placeholder="Search tenant or month..."
+        placeholder={t('history.searchPlaceholder') || "Search tenant or month..."}
         onChangeText={onChangeSearch}
         value={searchQuery}
         style={styles.searchBar}
         elevation={0}
+        placeholderTextColor={COLORS.textMuted}
+        iconColor={COLORS.textSecondary}
       />
 
       {loading ? (
@@ -150,7 +156,7 @@ export default function HistoryScreen() {
       ) : filteredBills.length === 0 ? (
         <View style={styles.emptyContainer}>
           <Ionicons name="receipt-outline" size={64} color={COLORS.textMuted} />
-          <Text style={styles.emptyText}>No bills found.</Text>
+          <Text style={styles.emptyText}>{t('common.noBills') || 'No bills found.'}</Text>
         </View>
       ) : (
         <FlatList
@@ -165,8 +171,8 @@ export default function HistoryScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.white },
+const createStyles = (COLORS: any) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: COLORS.background },
   header: {
     paddingHorizontal: SPACING.md,
     paddingTop: SPACING.md,
@@ -187,7 +193,7 @@ const styles = StyleSheet.create({
   billCard: {
     marginBottom: SPACING.sm,
     borderRadius: RADIUS.md,
-    backgroundColor: COLORS.white,
+    backgroundColor: COLORS.surface,
     borderWidth: 1,
     borderColor: COLORS.border,
     elevation: 0,

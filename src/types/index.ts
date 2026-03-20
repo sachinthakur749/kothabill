@@ -79,6 +79,7 @@ export type OwnerTabParamList = {
   History:      undefined;
   Notifications: undefined;
   Profile:      undefined;
+  Tenants:      undefined;
 };
 
 export type TenantTabParamList = {

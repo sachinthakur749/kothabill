@@ -4,13 +4,17 @@ import { Text, Card, ActivityIndicator, Avatar, Divider } from 'react-native-pap
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { collection, query, where, onSnapshot, doc, updateDoc } from 'firebase/firestore';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
+import { useAppColors } from '@/hooks/useAppColors';
 
 import { db } from '@/config/firebase';
 import { useAuthStore } from '@/store/authStore';
-import { COLORS, SPACING, FONT_SIZE, RADIUS, COLLECTIONS, SHADOW } from '@/constants';
+import { SPACING, FONT_SIZE, RADIUS, COLLECTIONS, SHADOW } from '@/constants';
 import { AppNotification } from '@/types';
 
 export default function NotificationsScreen() {
+  const { t } = useTranslation();
+  const COLORS = useAppColors();
   const { user } = useAuthStore();
   const [notifications, setNotifications] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -51,6 +55,8 @@ export default function NotificationsScreen() {
     }
   };
 
+  const styles = createStyles(COLORS);
+
   const renderNotifItem = ({ item }: { item: any }) => (
     <TouchableOpacity 
       onPress={() => markAsRead(item.id)}
@@ -63,7 +69,7 @@ export default function NotificationsScreen() {
         style={{ backgroundColor: item.billId ? COLORS.primary : COLORS.tenant }} 
       />
       <View style={styles.content}>
-        <Text style={[styles.message, !item.isRead && styles.unreadMessage]}>{item.message}</Text>
+        <Text style={[styles.message, { color: COLORS.textPrimary }, !item.isRead && styles.unreadMessage]}>{item.message}</Text>
         <Text style={styles.time}>{new Date(item.createdAt).toLocaleString()}</Text>
       </View>
       {!item.isRead && <View style={styles.dot} />}
@@ -73,7 +79,7 @@ export default function NotificationsScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>Notifications</Text>
+        <Text style={styles.title}>{t('common.notifications') || 'Notifications'}</Text>
         {notifications.some(n => !n.isRead) && (
           <View style={styles.badge}>
             <Text style={styles.badgeText}>{notifications.filter(n => !n.isRead).length}</Text>
@@ -86,14 +92,14 @@ export default function NotificationsScreen() {
       ) : notifications.length === 0 ? (
         <View style={styles.emptyContainer}>
           <Ionicons name="notifications-off-outline" size={64} color={COLORS.textMuted} />
-          <Text style={styles.emptyText}>No notifications yet.</Text>
+          <Text style={styles.emptyText}>{t('common.noNotifications') || 'No notifications yet.'}</Text>
         </View>
       ) : (
         <FlatList
           data={notifications}
           keyExtractor={(item) => item.id}
           renderItem={renderNotifItem}
-          ItemSeparatorComponent={() => <Divider />}
+          ItemSeparatorComponent={() => <Divider style={{ backgroundColor: COLORS.divider }} />}
           contentContainerStyle={styles.list}
         />
       )}
@@ -101,8 +107,8 @@ export default function NotificationsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.white },
+const createStyles = (COLORS: any) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: COLORS.background },
   header: {
     padding: SPACING.lg,
     flexDirection: 'row',
@@ -125,13 +131,13 @@ const styles = StyleSheet.create({
   notifItem: {
     flexDirection: 'row',
     padding: SPACING.md,
-    backgroundColor: COLORS.white,
+    backgroundColor: COLORS.background,
     alignItems: 'center',
     gap: SPACING.md,
   },
   unreadItem: { backgroundColor: COLORS.surface },
   content: { flex: 1 },
-  message: { fontSize: FONT_SIZE.md, color: COLORS.textPrimary },
+  message: { fontSize: FONT_SIZE.md },
   unreadMessage: { fontWeight: '600' },
   time: { fontSize: FONT_SIZE.xs, color: COLORS.textMuted, marginTop: 4 },
   dot: { width: 8, height: 8, borderRadius: 4, backgroundColor: COLORS.primary },

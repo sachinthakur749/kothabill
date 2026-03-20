@@ -17,14 +17,14 @@ export const COLORS = {
   amber:         '#BA7517',
   amberLight:    '#FAEEDA',
 
-  // Neutrals
+  // Neutrals (Light)
   white:         '#FFFFFF',
   background:    '#F8F9FA',
   surface:       '#FFFFFF',
   border:        '#E0E0E0',
   divider:       '#F0F0F0',
 
-  // Text
+  // Text (Light)
   textPrimary:   '#2C2C2A',
   textSecondary: '#5F5E5A',
   textMuted:     '#9E9D97',
@@ -35,6 +35,19 @@ export const COLORS = {
   error:         '#E24B4A',
   warning:       '#BA7517',
   info:          '#185FA5',
+} as const;
+
+export const DARK_COLORS = {
+  ...COLORS,
+  background:    '#121212',
+  surface:       '#1E1E1E',
+  border:        '#333333',
+  divider:       '#2C2C2C',
+  textPrimary:   '#E1E1E1',
+  textSecondary: '#A0A0A0',
+  textMuted:     '#666666',
+  primaryLight:  '#1A3D32',
+  tenantLight:   '#242145',
 } as const;
 
 // ── Bill category colors ──────────────────────────────────────────────────────
