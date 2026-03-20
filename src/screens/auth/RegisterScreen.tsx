@@ -43,13 +43,16 @@ export default function RegisterScreen() {
   const [loading, setLoading] = useState(false);
   const [role, setRole] = useState<UserRole>('tenant');
   const [name, setName] = useState('');
+  const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
   // --- Actions ---
   const handleRegister = async () => {
+    const emailNormalized = email.trim().toLowerCase();
     if (!name.trim()) return Alert.alert('Error', 'Please enter your name');
-    if (!email.trim() || !email.includes('@')) return Alert.alert('Error', 'Invalid email address');
+    if (!phone.trim() || phone.length < 10) return Alert.alert('Error', 'Please enter a valid 10-digit phone number');
+    if (!emailNormalized || !emailNormalized.includes('@')) return Alert.alert('Error', 'Invalid email address');
     if (password.length < 6) return Alert.alert('Error', 'Password must be at least 6 characters');
 
     setLoading(true);
@@ -61,8 +64,8 @@ export default function RegisterScreen() {
         const newUser: KothaBillUser = {
           uid:       userCredential.user.uid,
           name:      name.trim(),
-          email:     email.trim(),
-          phone:     '', // No phone set for now
+          email:     emailNormalized,
+          phone:     phone.trim(),
           role:      role,
           createdAt: Date.now(),
         };
@@ -140,6 +143,19 @@ export default function RegisterScreen() {
         onChangeText={setEmail}
         keyboardType="email-address"
         autoCapitalize="none"
+        autoCorrect={false}
+        mode="outlined"
+        outlineColor={COLORS.border}
+        activeOutlineColor={role === 'owner' ? COLORS.primary : COLORS.tenant}
+        style={styles.input}
+      />
+
+      <Text style={[styles.label, { marginTop: SPACING.sm }]}>Phone Number</Text>
+      <TextInput
+        placeholder="98XXXXXXXX"
+        value={phone}
+        onChangeText={setPhone}
+        keyboardType="phone-pad"
         mode="outlined"
         outlineColor={COLORS.border}
         activeOutlineColor={role === 'owner' ? COLORS.primary : COLORS.tenant}

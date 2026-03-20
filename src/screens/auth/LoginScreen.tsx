@@ -41,13 +41,14 @@ export default function LoginScreen() {
 
   // --- Actions ---
   const handleLogin = async () => {
-    if (!email.trim() || !email.includes('@')) return Alert.alert('Error', 'Invalid email address');
+    const emailNormalized = email.trim().toLowerCase();
+    if (!emailNormalized || !emailNormalized.includes('@')) return Alert.alert('Error', 'Invalid email address');
     if (password.length < 6) return Alert.alert('Error', 'Invalid password');
 
     setLoading(true);
     try {
-      console.log('Attempting login for:', email.trim());
-      const userCredential = await signInWithEmailAndPassword(auth, email.trim(), password);
+      console.log('Attempting login for:', emailNormalized);
+      const userCredential = await signInWithEmailAndPassword(auth, emailNormalized, password);
 
       if (userCredential.user) {
         // Check if user has a profile
@@ -69,17 +70,21 @@ export default function LoginScreen() {
       console.error('Login Error:', error.code, error.message);
 
       let errorMessage = 'Invalid email or password.';
-      if (error.code === 'auth/user-not-found') {
+      if (error.code === 'auth/invalid-credential') {
+        errorMessage = 'Invalid email or password. Please check your credentials and try again.';
+      } else if (error.code === 'auth/user-not-found') {
         errorMessage = 'No user found with this email.';
       } else if (error.code === 'auth/wrong-password') {
         errorMessage = 'Incorrect password.';
       } else if (error.code === 'auth/invalid-email') {
         errorMessage = 'The email address is badly formatted.';
+      } else if (error.code === 'auth/too-many-requests') {
+        errorMessage = 'Too many failed login attempts. Please try again later.';
       } else if (error.code === 'unavailable') {
         errorMessage = 'Firestore is unavailable. You might be offline or your connection is blocked.';
       }
 
-      Alert.alert('Login Failed', errorMessage + '\n\n' + (error.message || ''));
+      Alert.alert('Login Failed', errorMessage);
     } finally {
       setLoading(false);
     }
@@ -109,6 +114,7 @@ export default function LoginScreen() {
               onChangeText={setEmail}
               keyboardType="email-address"
               autoCapitalize="none"
+              autoCorrect={false}
               mode="outlined"
               outlineColor={COLORS.border}
               activeOutlineColor={COLORS.primary}
