@@ -85,10 +85,12 @@ export default function AddBillScreen() {
 
     setLoading(true);
     try {
+      const selectedTenant = tenants.find(t => t.uid === selectedTenantUid);
       const total = calculateTotal();
       const billData = {
         ownerId: user?.uid,
         tenantUid: selectedTenantUid,
+        tenantName: selectedTenant?.name || 'Unknown',
         roomId: user?.roomCode,
         month,
         rent: Number(rent) || 0,
@@ -96,11 +98,21 @@ export default function AddBillScreen() {
         water: Number(water) || 0,
         dustbin: Number(dustbin) || 0,
         note,
+        status: 'due',
         total,
         createdAt: Date.now(),
       };
 
-      await addDoc(collection(db, COLLECTIONS.BILLS), billData);
+      const docRef = await addDoc(collection(db, COLLECTIONS.BILLS), billData);
+      
+      // Add notification for tenant
+      await addDoc(collection(db, COLLECTIONS.NOTIFICATIONS), {
+        toUserId: selectedTenantUid,
+        billId: docRef.id,
+        message: `New bill added for ${month}. Total: Rs. ${total}`,
+        isRead: false,
+        createdAt: Date.now(),
+      });
       
       Alert.alert('Success', 'Bill added successfully!', [
         { text: 'OK', onPress: () => navigation.goBack() }

@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
-import { Text, Card, TextInput, Button, ActivityIndicator, Avatar } from 'react-native-paper';
+import { Text, Card, TextInput, Button, ActivityIndicator, Avatar, Badge } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { collection, query, where, getDocs, doc, updateDoc, limit, orderBy, onSnapshot } from 'firebase/firestore';
+import { collection, query, where, getDocs, doc, updateDoc, limit, onSnapshot, addDoc } from 'firebase/firestore';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 
@@ -66,6 +66,18 @@ export default function TenantHomeScreen() {
       const userRef = doc(db, COLLECTIONS.USERS, user!.uid);
       await updateDoc(userRef, { roomCode: roomCode.trim().toUpperCase() });
 
+      // 2.5 Add notification for owner
+      const roomDoc = snapshot.docs[0].data();
+      if (roomDoc.ownerId) {
+        await addDoc(collection(db, COLLECTIONS.NOTIFICATIONS), {
+          toUserId: roomDoc.ownerId,
+          message: `${user?.name} has joined your room (${roomCode.trim().toUpperCase()})`,
+          isRead: false,
+          createdAt: Date.now(),
+          type: 'join_room'
+        });
+      }
+
       // 3. Update local store
       setUser({ ...user!, roomCode: roomCode.trim().toUpperCase() });
       Alert.alert('Success', 'You have successfully joined the room!');
@@ -128,13 +140,18 @@ export default function TenantHomeScreen() {
         <ActivityIndicator color={COLORS.tenant} style={{ marginTop: SPACING.xl }} />
       ) : latestBill ? (
         <Card style={styles.billCard}>
-          <View style={styles.billHeader}>
-            <Text style={styles.monthText}>{latestBill.month}</Text>
-            <View style={styles.totalBadge}>
-              <Text style={styles.totalLabel}>TOTAL</Text>
-              <Text style={styles.totalValue}>Rs. {latestBill.total}</Text>
+            <View style={styles.billHeader}>
+              <View>
+                <Text style={styles.billMonth}>{latestBill.month}</Text>
+                <Text style={styles.billDate}>Added: {new Date(latestBill.createdAt).toLocaleDateString()}</Text>
+              </View>
+              <View style={styles.headerRight}>
+                <Text style={styles.billTotal}>Rs. {latestBill.total}</Text>
+                <Badge style={[styles.statusBadge, { backgroundColor: latestBill.status === 'paid' ? COLORS.success : COLORS.error }]}>
+                  {latestBill.status?.toUpperCase() || 'DUE'}
+                </Badge>
+              </View>
             </View>
-          </View>
           <Card.Content>
             <View style={styles.billRow}>
               <View style={[styles.dot, { backgroundColor: BILL_COLORS.rent }]} />
@@ -176,7 +193,7 @@ export default function TenantHomeScreen() {
 
       {/* Quick Links */}
       <View style={styles.quickLinks}>
-        <TouchableOpacity style={styles.linkCard} onPress={() => navigation.navigate('History')}>
+        <TouchableOpacity style={styles.linkCard} onPress={() => navigation.navigate('BillHistory')}>
           <Ionicons name="receipt-outline" size={28} color={COLORS.tenant} />
           <Text style={styles.linkText}>History</Text>
         </TouchableOpacity>
@@ -228,10 +245,11 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  monthText: { fontSize: FONT_SIZE.lg, fontWeight: '700', color: COLORS.tenant },
-  totalBadge: { alignItems: 'flex-end' },
-  totalLabel: { fontSize: 10, fontWeight: '700', color: COLORS.tenant, opacity: 0.7 },
-  totalValue: { fontSize: FONT_SIZE.xl, fontWeight: '800', color: COLORS.tenant },
+  billMonth: { fontSize: FONT_SIZE.xl, fontWeight: '700', color: COLORS.tenant },
+  billDate: { fontSize: 10, color: COLORS.textSecondary },
+  headerRight: { alignItems: 'flex-end', gap: 2 },
+  billTotal: { fontSize: FONT_SIZE.lg, fontWeight: '800', color: COLORS.tenant },
+  statusBadge: { fontSize: 8, height: 16, lineHeight: 14, minWidth: 40 },
   billRow: {
     flexDirection: 'row',
     alignItems: 'center',

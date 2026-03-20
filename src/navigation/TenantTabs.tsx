@@ -13,6 +13,7 @@ import TenantHomeScreen    from '@/screens/tenant/TenantHomeScreen';
 import BillHistoryScreen   from '@/screens/tenant/BillHistoryScreen';
 import OwnerInfoScreen     from '@/screens/tenant/OwnerInfoScreen';
 import TenantProfileScreen from '@/screens/tenant/TenantProfileScreen';
+import NotificationsScreen from '@/screens/common/NotificationsScreen';
 
 const Tab = createBottomTabNavigator<TenantTabParamList>();
 
@@ -41,6 +42,7 @@ export default function TenantTabs() {
             BillHistory: { outline: 'time-outline',          filled: 'time' },
             OwnerInfo:   { outline: 'person-circle-outline', filled: 'person-circle' },
             Profile:     { outline: 'settings-outline',      filled: 'settings' },
+            Notifications: { outline: 'notifications-outline', filled: 'notifications' },
           };
           const icon = icons[route.name];
           const name = focused ? icon.filled : icon.outline;
@@ -51,6 +53,7 @@ export default function TenantTabs() {
       <Tab.Screen name="Home"        component={TenantHomeScreen}    options={{ tabBarLabel: 'My Bills' }} />
       <Tab.Screen name="BillHistory" component={BillHistoryScreen}   options={{ tabBarLabel: 'History' }} />
       <Tab.Screen name="OwnerInfo"   component={OwnerInfoScreen}     options={{ tabBarLabel: 'Owner' }} />
+      <Tab.Screen name="Notifications" component={NotificationsScreen} options={{ tabBarLabel: 'Notifs' }} />
       <Tab.Screen name="Profile"     component={TenantProfileScreen} options={{ tabBarLabel: 'Profile' }} />
     </Tab.Navigator>
   );

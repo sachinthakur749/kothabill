@@ -11,8 +11,9 @@ import { OwnerTabParamList } from '@/types';
 // Placeholder screens — will be built in Phase 2
 import OwnerDashboardScreen from '@/screens/owner/OwnerDashboardScreen';
 import AddBillScreen        from '@/screens/owner/AddBillScreen';
-import HistoryScreen        from '@/screens/owner/HistoryScreen';
-import ProfileScreen        from '@/screens/owner/ProfileScreen';
+import HistoryScreen from '@/screens/owner/HistoryScreen';
+import ProfileScreen from '@/screens/owner/ProfileScreen';
+import NotificationsScreen from '@/screens/common/NotificationsScreen';
 
 const Tab = createBottomTabNavigator<OwnerTabParamList>();
 
@@ -39,8 +40,9 @@ export default function OwnerTabs() {
           const icons: Record<string, { outline: string; filled: string }> = {
             Dashboard: { outline: 'home-outline',    filled: 'home' },
             AddBill:   { outline: 'add-circle-outline', filled: 'add-circle' },
-            History:   { outline: 'receipt-outline', filled: 'receipt' },
-            Profile:   { outline: 'person-outline',  filled: 'person' },
+            History:   { outline: 'time-outline',          filled: 'time' },
+            Profile:   { outline: 'settings-outline',      filled: 'settings' },
+            Notifications: { outline: 'notifications-outline', filled: 'notifications' },
           };
           const icon = icons[route.name];
           const name = focused ? icon.filled : icon.outline;
@@ -50,8 +52,9 @@ export default function OwnerTabs() {
     >
       <Tab.Screen name="Dashboard" component={OwnerDashboardScreen} options={{ tabBarLabel: 'Home' }} />
       <Tab.Screen name="AddBill"   component={AddBillScreen}         options={{ tabBarLabel: 'Add Bill' }} />
-      <Tab.Screen name="History"   component={HistoryScreen}         options={{ tabBarLabel: 'History' }} />
-      <Tab.Screen name="Profile"   component={ProfileScreen}         options={{ tabBarLabel: 'Profile' }} />
+      <Tab.Screen name="History"   component={HistoryScreen} options={{ tabBarLabel: 'History' }} />
+      <Tab.Screen name="Notifications" component={NotificationsScreen} options={{ tabBarLabel: 'Notifs' }} />
+      <Tab.Screen name="Profile"   component={ProfileScreen} options={{ tabBarLabel: 'Profile' }} />
     </Tab.Navigator>
   );
 }

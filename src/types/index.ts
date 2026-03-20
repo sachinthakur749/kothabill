@@ -49,6 +49,7 @@ export interface Bill {
   water:        number;   // Water bill in NPR
   dustbin:      number;   // Dustbin/waste collection in NPR
   note?:        string;   // Optional note from owner
+  status:      'due' | 'paid';
   total:        number;   // Auto-calculated sum
   createdAt:    number;
 }
@@ -76,6 +77,7 @@ export type OwnerTabParamList = {
   Dashboard:    undefined;
   AddBill:      { tenantUid?: string } | undefined;
   History:      undefined;
+  Notifications: undefined;
   Profile:      undefined;
 };
 
@@ -83,5 +85,6 @@ export type TenantTabParamList = {
   Home:         undefined;
   BillHistory:  undefined;
   OwnerInfo:    undefined;
+  Notifications: undefined;
   Profile:      undefined;
 };
