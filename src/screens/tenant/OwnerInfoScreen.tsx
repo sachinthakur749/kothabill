@@ -7,6 +7,7 @@ import { Ionicons } from '@expo/vector-icons';
 
 import { db } from '@/config/firebase';
 import { useAuthStore } from '@/store/authStore';
+import { useAppColors } from '@/hooks/useAppColors';
 import { COLORS, SPACING, FONT_SIZE, RADIUS, COLLECTIONS, SHADOW } from '@/constants';
 import { KothaBillUser } from '@/types';
 
@@ -14,6 +15,7 @@ export default function OwnerInfoScreen() {
   const { user } = useAuthStore();
   const [owner, setOwner] = useState<KothaBillUser | null>(null);
   const [loading, setLoading] = useState(true);
+  const COLORS = useAppColors();
 
   useEffect(() => {
     const fetchOwner = async () => {
@@ -26,7 +28,7 @@ export default function OwnerInfoScreen() {
         // 1. Find the room to get ownerId
         const q = query(collection(db, COLLECTIONS.ROOMS), where('roomCode', '==', user.roomCode));
         const roomSnap = await getDocs(q);
-        
+
         if (!roomSnap.empty) {
           const ownerId = roomSnap.docs[0].data().ownerId;
           // 2. Fetch owner profile
@@ -47,11 +49,13 @@ export default function OwnerInfoScreen() {
 
   const handleCall = () => {
     if (owner?.phone) {
-       Linking.openURL(`tel:${owner.phone}`);
+      Linking.openURL(`tel:${owner.phone}`);
     } else {
       Alert.alert('Error', 'Owner phone number not available.');
     }
   };
+
+  const styles = createStyles(COLORS);
 
   if (loading) {
     return (
@@ -90,7 +94,7 @@ export default function OwnerInfoScreen() {
                 <Text style={styles.infoValue}>{owner?.phone || 'Not available'}</Text>
               </View>
               <TouchableOpacity onPress={handleCall} style={styles.actionBtn}>
-                <Ionicons name="call" size={20} color={COLORS.white} />
+                <Ionicons name="call" size={20} color="#FFFFFF" />
               </TouchableOpacity>
             </View>
 
@@ -127,39 +131,46 @@ export default function OwnerInfoScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (COLORS: any) => StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.background },
-  scroll:    { padding: SPACING.lg },
-  center:    { flex: 1, alignItems: 'center', justifyContent: 'center', padding: SPACING.xl },
-  title:     { fontSize: FONT_SIZE.xxl, fontWeight: '700', color: COLORS.textPrimary, marginBottom: SPACING.xl },
+  scroll: { padding: SPACING.lg },
+  center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: SPACING.xl },
+  title: { fontSize: FONT_SIZE.xxl, fontWeight: '700', color: COLORS.textPrimary, marginBottom: SPACING.xl },
   profileSection: { alignItems: 'center', marginBottom: SPACING.xxl },
   ownerName: { fontSize: FONT_SIZE.xl, fontWeight: '700', color: COLORS.textPrimary, marginTop: SPACING.md },
-  idBadge: { 
-    fontSize: FONT_SIZE.sm, 
-    color: COLORS.tenant, 
-    fontWeight: '600', 
-    backgroundColor: COLORS.tenantLight, 
-    paddingHorizontal: SPACING.md, 
-    paddingVertical: 2, 
+  idBadge: {
+    fontSize: FONT_SIZE.sm,
+    color: COLORS.tenant,
+    fontWeight: '600',
+    backgroundColor: COLORS.tenantLight,
+    paddingHorizontal: SPACING.md,
+    paddingVertical: 2,
     borderRadius: RADIUS.full,
     marginTop: SPACING.xs
   },
-  infoCard: { backgroundColor: COLORS.white, borderRadius: RADIUS.lg, ...SHADOW.md },
+  infoCard: { backgroundColor: COLORS.surface, borderRadius: RADIUS.lg, ...SHADOW.md },
   infoRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: SPACING.md },
   infoText: { flex: 1, marginLeft: SPACING.md },
   infoLabel: { fontSize: FONT_SIZE.xs, color: COLORS.textMuted },
   infoValue: { fontSize: FONT_SIZE.md, color: COLORS.textPrimary, fontWeight: '500' },
   divider: { backgroundColor: COLORS.divider },
-  actionBtn: { 
-    backgroundColor: COLORS.tenant, 
-    width: 40, 
-    height: 40, 
-    borderRadius: 20, 
-    alignItems: 'center', 
-    justifyContent: 'center' 
+  actionBtn: {
+    backgroundColor: COLORS.tenant,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center'
   },
   emptyText: { marginTop: SPACING.md, color: COLORS.textMuted, textAlign: 'center' },
-  helpBox: { marginTop: SPACING.xxl, padding: SPACING.md, backgroundColor: COLORS.white, borderRadius: RADIUS.md, borderWidth: 1, borderColor: COLORS.divider },
+  helpBox: {
+    marginTop: SPACING.xxl,
+    padding: SPACING.md,
+    backgroundColor: COLORS.surface,
+    borderRadius: RADIUS.md,
+    borderWidth: 1,
+    borderColor: COLORS.divider
+  },
   helpTitle: { fontSize: FONT_SIZE.md, fontWeight: '600', color: COLORS.textPrimary, marginBottom: SPACING.xs },
   helpDesc: { fontSize: FONT_SIZE.sm, color: COLORS.textSecondary, lineHeight: 20 },
 });

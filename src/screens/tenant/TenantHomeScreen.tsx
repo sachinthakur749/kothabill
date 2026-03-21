@@ -182,7 +182,7 @@ export default function TenantHomeScreen() {
                 backgroundGradientFrom: COLORS.surface,
                 backgroundGradientTo: COLORS.surface,
                 decimalPlaces: 0,
-                color: (opacity = 1) => COLORS.tenant,
+                color: (opacity = 1) => `${COLORS.tenant}${Math.round(opacity * 255).toString(16).padStart(2, '0')}`,
                 labelColor: (opacity = 1) => COLORS.textSecondary,
                 style: { borderRadius: 16 },
                 propsForDots: { r: "4", strokeWidth: "2", stroke: COLORS.tenant }
@@ -238,7 +238,7 @@ const createStyles = (COLORS: any) => StyleSheet.create({
   sectionTitle: { fontSize: FONT_SIZE.lg, fontWeight: '700', color: COLORS.textPrimary, marginBottom: SPACING.md },
   billCard: { 
     borderRadius: RADIUS.lg, 
-    backgroundColor: COLORS.white, 
+    backgroundColor: COLORS.surface, 
     ...SHADOW.sm,
     borderWidth: 1,
     borderColor: COLORS.border,
@@ -275,7 +275,7 @@ const createStyles = (COLORS: any) => StyleSheet.create({
   quickLinks: { flexDirection: 'row', gap: SPACING.md, marginTop: SPACING.xl },
   linkCard: {
     flex: 1,
-    backgroundColor: COLORS.white,
+    backgroundColor: COLORS.surface,
     padding: SPACING.md,
     borderRadius: RADIUS.lg,
     alignItems: 'center',
@@ -285,7 +285,7 @@ const createStyles = (COLORS: any) => StyleSheet.create({
   },
   linkText: { marginTop: SPACING.xs, fontSize: FONT_SIZE.xs, fontWeight: '600', color: COLORS.textSecondary },
 
-  emptyCard: { borderRadius: RADIUS.lg, backgroundColor: COLORS.white, ...SHADOW.sm },
+  emptyCard: { borderRadius: RADIUS.lg, backgroundColor: COLORS.surface, ...SHADOW.sm },
   emptyContent: { alignItems: 'center', padding: SPACING.xl },
   emptyText: { marginTop: SPACING.md, color: COLORS.textMuted, textAlign: 'center' },
 });

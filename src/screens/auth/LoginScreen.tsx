@@ -25,6 +25,7 @@ import { doc, getDoc } from 'firebase/firestore';
 
 import { auth, db } from '@/config/firebase';
 import { COLORS, SPACING, FONT_SIZE, RADIUS, COLLECTIONS } from '@/constants';
+import { useAppColors } from '@/hooks/useAppColors';
 import { useAuthStore } from '@/store/authStore';
 import { KothaBillUser, RootStackParamList } from '@/types';
 
@@ -33,11 +34,14 @@ type LoginNavProp = StackNavigationProp<RootStackParamList, 'Login'>;
 export default function LoginScreen() {
   const navigation = useNavigation<LoginNavProp>();
   const { setUser } = useAuthStore();
+  const COLORS = useAppColors();
 
   // --- State ---
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+
+  const styles = createStyles(COLORS);
 
   // --- Actions ---
   const handleLogin = async () => {
@@ -119,6 +123,8 @@ export default function LoginScreen() {
               outlineColor={COLORS.border}
               activeOutlineColor={COLORS.primary}
               style={styles.input}
+              textColor={COLORS.textPrimary}
+              placeholderTextColor={COLORS.textMuted}
             />
 
             <Text style={[styles.label, { marginTop: SPACING.sm }]}>Password</Text>
@@ -131,6 +137,8 @@ export default function LoginScreen() {
               outlineColor={COLORS.border}
               activeOutlineColor={COLORS.primary}
               style={styles.input}
+              textColor={COLORS.textPrimary}
+              placeholderTextColor={COLORS.textMuted}
             />
 
             <Button
@@ -149,7 +157,7 @@ export default function LoginScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (COLORS: any) => StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.background },
   scroll: { padding: SPACING.lg, flexGrow: 1 },
   back: { marginBottom: SPACING.md },

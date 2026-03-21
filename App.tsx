@@ -15,6 +15,7 @@ import { useAuthStore } from '@/store/authStore';
 import { KothaBillUser } from '@/types';
 import { COLORS, COLLECTIONS } from '@/constants';
 import RootNavigator from '@/navigation/RootNavigator';
+import { DefaultTheme, DarkTheme } from '@react-navigation/native';
 
 import { useColorScheme } from 'react-native';
 import { useThemeStore } from '@/store/themeStore';
@@ -41,7 +42,33 @@ const darkTheme = {
     ...MD3DarkTheme.colors,
     primary:          COLORS.primary,
     secondary:        COLORS.tenant,
-    // Add more specific dark colors if needed
+    background:       '#121212',
+    surface:          '#1E1E1E',
+  },
+};
+
+// ── Navigation Themes ──────────────────────────────────────────────────────────
+const lightNavTheme = {
+  ...DefaultTheme,
+  colors: {
+    ...DefaultTheme.colors,
+    primary:    COLORS.primary,
+    background: COLORS.background,
+    card:       COLORS.surface,
+    text:       COLORS.textPrimary,
+    border:     COLORS.border,
+  },
+};
+
+const darkNavTheme = {
+  ...DarkTheme,
+  colors: {
+    ...DarkTheme.colors,
+    primary:    COLORS.primary,
+    background: '#121212',
+    card:       '#1E1E1E',
+    text:       '#E1E1E1',
+    border:     '#333333',
   },
 };
 
@@ -50,11 +77,11 @@ export default function App() {
   const { isDarkMode, setDarkMode } = useThemeStore();
   
   useEffect(() => {
-    // If no preference is set, follow system (optional logic)
-    // For now, let's just use the store value which defaults to false
+    // Sync with system theme if needed
   }, [systemColorScheme]);
 
   const theme = isDarkMode ? darkTheme : lightTheme;
+  const navTheme = isDarkMode ? darkNavTheme : lightNavTheme;
   const { setUser, setLoading } = useAuthStore();
 
   useEffect(() => {
@@ -87,8 +114,8 @@ export default function App() {
   return (
     <SafeAreaProvider>
       <PaperProvider theme={theme}>
-        <NavigationContainer>
-          <StatusBar style="auto" />
+        <NavigationContainer theme={navTheme}>
+          <StatusBar style={isDarkMode ? 'light' : 'dark'} />
           <RootNavigator />
         </NavigationContainer>
       </PaperProvider>

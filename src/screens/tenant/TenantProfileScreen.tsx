@@ -4,12 +4,14 @@ import { Text, Avatar, Button, Divider } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 
+import { useAppColors } from '@/hooks/useAppColors';
 import { auth } from '@/config/firebase';
 import { useAuthStore } from '@/store/authStore';
 import { COLORS, SPACING, FONT_SIZE, RADIUS, SHADOW } from '@/constants';
 
 export default function TenantProfileScreen() {
   const { user, logout } = useAuthStore();
+  const COLORS = useAppColors();
 
   const handleLogout = () => {
     Alert.alert(
@@ -32,6 +34,8 @@ export default function TenantProfileScreen() {
       ]
     );
   };
+
+  const styles = createStyles(COLORS);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -74,6 +78,7 @@ export default function TenantProfileScreen() {
 
       <View style={styles.footer}>
         <Button 
+          // @ts-ignore
           mode="outlined" 
           onPress={handleLogout}
           textColor={COLORS.error}
@@ -88,7 +93,7 @@ export default function TenantProfileScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (COLORS: any) => StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.background },
   header:    { padding: SPACING.lg },
   title:     { fontSize: FONT_SIZE.xxl, fontWeight: '700', color: COLORS.textPrimary },
@@ -96,7 +101,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     padding: SPACING.lg,
-    backgroundColor: COLORS.white,
+    backgroundColor: COLORS.surface,
     marginHorizontal: SPACING.md,
     borderRadius: RADIUS.lg,
     ...SHADOW.sm,
@@ -106,7 +111,7 @@ const styles = StyleSheet.create({
   role: { fontSize: FONT_SIZE.md, color: COLORS.textMuted },
   section: {
     marginTop: SPACING.xl,
-    backgroundColor: COLORS.white,
+    backgroundColor: COLORS.surface,
     marginHorizontal: SPACING.md,
     borderRadius: RADIUS.lg,
     padding: SPACING.md,

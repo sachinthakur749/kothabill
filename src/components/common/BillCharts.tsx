@@ -4,6 +4,8 @@ import { BarChart, LineChart } from 'react-native-chart-kit';
 import { Text } from 'react-native-paper';
 import { COLORS, SPACING, FONT_SIZE } from '@/constants';
 
+import { useAppColors } from '@/hooks/useAppColors';
+
 interface BillChartsProps {
   data: number[];
   labels: string[];
@@ -11,7 +13,9 @@ interface BillChartsProps {
   color?: string;
 }
 
-export const ExpenseTrendChart = ({ data, labels, title, color = COLORS.primary }: BillChartsProps) => {
+export const ExpenseTrendChart = ({ data, labels, title, color }: BillChartsProps) => {
+  const COLORS = useAppColors();
+  const themeColor = color || COLORS.primary;
   const windowWidth = Dimensions.get('window').width - (SPACING.md * 4);
 
   return (
@@ -33,7 +37,7 @@ export const ExpenseTrendChart = ({ data, labels, title, color = COLORS.primary 
           backgroundGradientFrom: COLORS.surface,
           backgroundGradientTo: COLORS.surface,
           decimalPlaces: 0,
-          color: (opacity = 1) => `${color}${Math.round(opacity * 255).toString(16).padStart(2, '0')}`,
+          color: (opacity = 1) => `${themeColor}${Math.round(opacity * 255).toString(16).padStart(2, '0')}`,
           labelColor: (opacity = 1) => COLORS.textSecondary,
           style: {
             borderRadius: 16
@@ -41,7 +45,7 @@ export const ExpenseTrendChart = ({ data, labels, title, color = COLORS.primary 
           propsForDots: {
             r: "6",
             strokeWidth: "2",
-            stroke: color
+            stroke: themeColor
           }
         }}
         style={{

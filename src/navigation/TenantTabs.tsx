@@ -5,7 +5,8 @@ import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 
-import { COLORS, FONT_SIZE } from '@/constants';
+import { useAppColors } from '@/hooks/useAppColors';
+import { SPACING, FONT_SIZE } from '@/constants';
 import { TenantTabParamList } from '@/types';
 
 // Placeholder screens — will be built in Phase 2
@@ -18,6 +19,8 @@ import NotificationsScreen from '@/screens/common/NotificationsScreen';
 const Tab = createBottomTabNavigator<TenantTabParamList>();
 
 export default function TenantTabs() {
+  const COLORS = useAppColors();
+
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({

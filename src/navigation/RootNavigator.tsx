@@ -5,6 +5,7 @@ import React from 'react';
 import { View, ActivityIndicator, StyleSheet } from 'react-native';
 import { createStackNavigator } from '@react-navigation/stack';
 
+import { useAppColors } from '@/hooks/useAppColors';
 import { useAuthStore } from '@/store/authStore';
 import { COLORS } from '@/constants';
 import { RootStackParamList } from '@/types';
@@ -22,11 +23,12 @@ const Stack = createStackNavigator<RootStackParamList>();
 
 export default function RootNavigator() {
   const { isLoggedIn, isLoading, user } = useAuthStore();
+  const COLORS = useAppColors();
 
   // Show a loading spinner while Firebase checks auth state
   if (isLoading) {
     return (
-      <View style={styles.loader}>
+      <View style={[styles.loader, { backgroundColor: COLORS.background }]}>
         <ActivityIndicator size="large" color={COLORS.primary} />
       </View>
     );
@@ -60,6 +62,5 @@ const styles = StyleSheet.create({
     flex:            1,
     justifyContent:  'center',
     alignItems:      'center',
-    backgroundColor: COLORS.background,
   },
 });

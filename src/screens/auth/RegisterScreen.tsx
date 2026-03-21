@@ -29,6 +29,7 @@ import { doc, setDoc } from 'firebase/firestore';
 
 import { auth, db } from '@/config/firebase';
 import { COLORS, SPACING, FONT_SIZE, RADIUS, COLLECTIONS } from '@/constants';
+import { useAppColors } from '@/hooks/useAppColors';
 import { UserRole, KothaBillUser, RootStackParamList } from '@/types';
 import { useAuthStore } from '@/store/authStore';
 
@@ -37,6 +38,7 @@ type RegisterNavProp = StackNavigationProp<RootStackParamList, 'Register'>;
 export default function RegisterScreen() {
   const navigation = useNavigation<RegisterNavProp>();
   const { setUser } = useAuthStore();
+  const COLORS = useAppColors();
 
   // --- State ---
   const [step, setStep] = useState<1 | 2>(1); // 1: Name & Role, 2: Email & Password
@@ -46,6 +48,8 @@ export default function RegisterScreen() {
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+
+  const styles = createStyles(COLORS);
 
   // --- Actions ---
   const handleRegister = async () => {
@@ -94,13 +98,13 @@ export default function RegisterScreen() {
           {
             value: 'owner',
             label: 'Room Owner',
-            checkedColor: COLORS.white,
+            checkedColor: '#FFFFFF',
             style: { backgroundColor: role === 'owner' ? COLORS.primary : 'transparent' }
           },
           {
             value: 'tenant',
             label: 'Tenant',
-            checkedColor: COLORS.white,
+            checkedColor: '#FFFFFF',
             style: { backgroundColor: role === 'tenant' ? COLORS.tenant : 'transparent' }
           },
         ]}
@@ -121,6 +125,8 @@ export default function RegisterScreen() {
         outlineColor={COLORS.border}
         activeOutlineColor={role === 'owner' ? COLORS.primary : COLORS.tenant}
         style={styles.input}
+        textColor={COLORS.textPrimary}
+        placeholderTextColor={COLORS.textMuted}
       />
 
       <Button
@@ -148,6 +154,8 @@ export default function RegisterScreen() {
         outlineColor={COLORS.border}
         activeOutlineColor={role === 'owner' ? COLORS.primary : COLORS.tenant}
         style={styles.input}
+        textColor={COLORS.textPrimary}
+        placeholderTextColor={COLORS.textMuted}
       />
 
       <Text style={[styles.label, { marginTop: SPACING.sm }]}>Phone Number</Text>
@@ -160,6 +168,8 @@ export default function RegisterScreen() {
         outlineColor={COLORS.border}
         activeOutlineColor={role === 'owner' ? COLORS.primary : COLORS.tenant}
         style={styles.input}
+        textColor={COLORS.textPrimary}
+        placeholderTextColor={COLORS.textMuted}
       />
 
       <Text style={[styles.label, { marginTop: SPACING.sm }]}>Password</Text>
@@ -172,6 +182,8 @@ export default function RegisterScreen() {
         outlineColor={COLORS.border}
         activeOutlineColor={role === 'owner' ? COLORS.primary : COLORS.tenant}
         style={styles.input}
+        textColor={COLORS.textPrimary}
+        placeholderTextColor={COLORS.textMuted}
       />
 
       <Button
@@ -214,7 +226,7 @@ export default function RegisterScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (COLORS: any) => StyleSheet.create({
   container:  { flex: 1, backgroundColor: COLORS.background },
   scroll:     { padding: SPACING.lg, flexGrow: 1 },
   back:       { marginBottom: SPACING.md },

@@ -7,12 +7,15 @@ import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 
 import { COLORS, SPACING, FONT_SIZE, RADIUS, APP_NAME, APP_TAGLINE } from '@/constants';
+import { useAppColors } from '@/hooks/useAppColors';
 import { RootStackParamList } from '@/types';
 
 type Nav = StackNavigationProp<RootStackParamList, 'Welcome'>;
 
 export default function WelcomeScreen() {
   const navigation = useNavigation<Nav>();
+  const COLORS = useAppColors();
+  const styles = createStyles(COLORS);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -52,7 +55,7 @@ export default function WelcomeScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (COLORS: any) => StyleSheet.create({
   container: {
     flex:            1,
     backgroundColor: COLORS.background,
@@ -106,7 +109,7 @@ const styles = StyleSheet.create({
     alignItems:      'center',
   },
   btnPrimaryText: {
-    color:      COLORS.white,
+    color:      '#FFFFFF',
     fontSize:   FONT_SIZE.lg,
     fontWeight: '600',
   },

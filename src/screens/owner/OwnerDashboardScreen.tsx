@@ -111,7 +111,7 @@ export default function OwnerDashboardScreen() {
             <Text style={styles.greeting}>{t('common.welcome')},</Text>
             <Text style={styles.ownerName}>{user?.name}</Text>
           </View>
-          <Avatar.Icon size={48} icon="home-city" color={COLORS.white} style={{ backgroundColor: COLORS.primary }} />
+          <Avatar.Icon size={48} icon="home-city" color="#FFFFFF" style={{ backgroundColor: COLORS.primary }} />
         </View>
 
         {!user?.roomCode ? (
@@ -187,8 +187,8 @@ export default function OwnerDashboardScreen() {
               </TouchableOpacity>
               
               <TouchableOpacity style={styles.actionItem} onPress={() => navigation.navigate('History')}>
-                <View style={[styles.iconBox, { backgroundColor: COLORS.amberLight }]}>
-                  <Ionicons name="time-outline" size={32} color={COLORS.amber} />
+                <View style={[styles.iconBox, { backgroundColor: '#FFF9E6' }]}>
+                  <Ionicons name="time-outline" size={32} color="#FFB000" />
                 </View>
                 <Text style={styles.actionLabel}>{t('owner.history')}</Text>
               </TouchableOpacity>
@@ -219,7 +219,7 @@ const createStyles = (COLORS: any) => StyleSheet.create({
   greeting: { fontSize: FONT_SIZE.md, color: COLORS.textSecondary },
   ownerName: { fontSize: FONT_SIZE.xxl, fontWeight: '800', color: COLORS.textPrimary },
   
-  setupCard: { marginTop: SPACING.xl, borderRadius: RADIUS.lg, backgroundColor: COLORS.white, ...SHADOW.md },
+  setupCard: { marginTop: SPACING.xl, borderRadius: RADIUS.lg, backgroundColor: COLORS.surface, ...SHADOW.md },
   setupContent: { alignItems: 'center', padding: SPACING.xl },
   setupTitle: { fontSize: FONT_SIZE.xl, fontWeight: '700', marginTop: SPACING.md, color: COLORS.textPrimary },
   setupDesc: { textAlign: 'center', color: COLORS.textSecondary, marginTop: SPACING.sm, marginBottom: SPACING.xl },
@@ -231,14 +231,14 @@ const createStyles = (COLORS: any) => StyleSheet.create({
   statLabel: { fontSize: FONT_SIZE.xs, fontWeight: '600' },
   statValue: { fontSize: FONT_SIZE.lg, fontWeight: '800', marginTop: 4 },
 
-  codeCard: { borderRadius: RADIUS.lg, backgroundColor: COLORS.white, ...SHADOW.sm, marginBottom: SPACING.lg },
+  codeCard: { borderRadius: RADIUS.lg, backgroundColor: COLORS.surface, ...SHADOW.sm, marginBottom: SPACING.lg },
   codeContent: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   codeLabel: { fontSize: FONT_SIZE.xs, color: COLORS.textMuted, fontWeight: '600' },
   codeValue: { fontSize: FONT_SIZE.xl, fontWeight: '900', color: COLORS.textPrimary, letterSpacing: 2 },
   shareBtn: { alignItems: 'center' },
   shareText: { fontSize: 10, color: COLORS.primary, fontWeight: '600' },
 
-  analyticsCard: { borderRadius: RADIUS.lg, backgroundColor: COLORS.white, ...SHADOW.sm, marginBottom: SPACING.lg },
+  analyticsCard: { borderRadius: RADIUS.lg, backgroundColor: COLORS.surface, ...SHADOW.sm, marginBottom: SPACING.lg },
 
   sectionTitle: { fontSize: FONT_SIZE.lg, fontWeight: '700', color: COLORS.textPrimary, marginBottom: SPACING.md },
   actionsGrid: { flexDirection: 'row', justifyContent: 'space-between' },
